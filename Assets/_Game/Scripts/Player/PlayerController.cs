@@ -3,37 +3,54 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
-    public Transform boomerang;
+    public GameObject boomerang;
 
-    private bool holdingBoomerang; 
-    
+    private bool m_HoldingBoomerang;
+    private Camera m_Camera;
+
 	// Use this for initialization
 	void Start () {
-        holdingBoomerang = true;
+        m_HoldingBoomerang = true;
+        m_Camera = Camera.main;
 	}
 	
 	// Update is called once per frame
 	void Update () {
         if (Input.GetMouseButton(0)) {
 
-            Vector3 mousePos = Input.mousePosition;
+            Vector2 mousePos = m_Camera.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 startPos = this.transform.position;
 
-            if (holdingBoomerang == true) {
-                //Debug.Log("Throw Boomerang");
-                Debug.Log(mousePos);
+            if (m_HoldingBoomerang == true) {
+                m_HoldingBoomerang = false;
 
-                Vector3 startPos = mousePos;
+                var heading = mousePos - startPos;
+                var direction = heading.normalized;
 
                 // Start Pos in between x -0.9 to 0.9
                 // and y between -3.2 to -2.6
 
-                ThrowBoomerang(startPos);
+                ThrowBoomerang(direction);
             }            
         }
 	}
 
-    void ThrowBoomerang(Vector3 startPos)
+    void ThrowBoomerang(Vector3 direction)
     {
-        Instantiate(boomerang, new Vector3(0.0f, 1.0f, 0.0f), Quaternion.identity);
+        GameObject zBoomerang = Instantiate(boomerang, this.transform.position, Quaternion.identity) as GameObject;
+        BoomerangScript boomerangScript = zBoomerang.GetComponent<BoomerangScript>();
+        boomerangScript.direction = direction;
+    }
+
+    public void CatchBoomerang(){
+        m_HoldingBoomerang = true;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "Boomerang"){
+            CatchBoomerang();
+            Destroy(collision.gameObject);
+        }
     }
 }
