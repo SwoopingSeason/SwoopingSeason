@@ -7,9 +7,12 @@ public class PlayerController : MonoBehaviour {
 
     private bool m_HoldingBoomerang;
     private Camera m_Camera;
+    private Vector2 m_TouchDownPos;
+    private Vector2 m_TouchUpPos;
+    private Vector2 m_SwipeDir;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start () {
         m_HoldingBoomerang = true;
         m_Camera = Camera.main;
 	}
@@ -31,9 +34,28 @@ public class PlayerController : MonoBehaviour {
                 // and y between -3.2 to -2.6
 
                 ThrowBoomerang(direction);
-            }            
-        }
-	}
+            } 
+            
+            if (!m_HoldingBoomerang) {
+                var heading = player.transform.position - transform.position;
+                var distance = heading.magnitude;
+
+                if (Input.GetMouseButtonDown(0)) {
+                    m_TouchDownPos = Input.mousePosition;
+                }
+
+                if (Input.GetMouseButtonUp(0)) {
+                    m_TouchUpPos = Input.mousePosition;
+
+                    m_SwipeDir = m_TouchUpPos - m_TouchDownPos;
+                    m_SwipeDir.Normalize();
+
+                    if (distance > colliderActiveDistance)
+                        m_RigidBody.AddForce(m_SwipeDir * swipeForce);
+                }
+            }
+        }        
+    }
 
     void ThrowBoomerang(Vector3 direction)
     {
